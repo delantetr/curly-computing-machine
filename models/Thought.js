@@ -1,49 +1,46 @@
 const { Schema, model } = require('mongoose');
 
-const thoughtSchema = new Schema(
-  {
-    userName: {
-      type: String,
-      unique: true,
-      required: true,
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      validate: {
-        validator: (value) => {
-          return /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(value);
-        },
-        message: 'Please enter a valid email address',
-      },
-    },
-    thoughts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Thought',
-      },
-    ],
-    friends: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+// Define the nested reaction schema
+const reactionSchema = new Schema({
+  reactionBody: {
+    type: String,
+    required: true,
   },
-  {
-    toJSON: {
-      virtuals: true,
-    },
-    id: false,
-  }
-);
+  username: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-userSchema.virtual('friendCount').get(function () {
-    return this.friends.length;
-  });
+// Define the main Thought schema
+const thoughtSchema = new Schema({
+  thoughtText: {
+    type: String,
+    required: true,
+    minlength: 1,
+    maxlength: 280,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  username: {
+    type: String,
+    required: true,
+  },
+  reactions: [reactionSchema], // Array of nested reaction documents
+});
 
-const User = model('User', userSchema);
 
-module.exports = User;
+thoughtSchema.virtual('reactionCount').get(function () {
+  return this.reactions.length;
+});
+
+
+const Thought = model('Thought', thoughtSchema);
+
+module.exports = Thought;
